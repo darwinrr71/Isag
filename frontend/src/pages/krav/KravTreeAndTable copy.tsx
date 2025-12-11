@@ -9,24 +9,13 @@ import { NavigationTree } from './NavigationTree';
 import { KravTableView } from './KravTableView';
 import { KravBreadcrumbs } from '@/components/krav/KravBreadcrumbs';
 
-import isaglogo from '@/assets/isaglogo.svg';
+import IsagLogo from '@/assets/IsagLogo.svg';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { PanelLeft, Plus } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-
-// 👉 Formularios + tipos
-import type {
-  Del,
-  Avsnitt as AvsnittType,
-  Omrade as OmradeType,
-  Stycke as StyckeType,
-} from '@/types/domainTypes';
-import { DelForm } from '../navigationtree/DelForm';
-import { AvsnittForm } from '../navigationtree/AvsnittForm';
-import { OmradeForm } from '../navigationtree/OmradeForm';
-import { StyckeForm } from '../navigationtree/StyckeForm';
+import { PanelLeft, Plus } from 'lucide-react'; // 👉 ADICIÓN: Plus
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'; // 👉 ADICIÓN: Dialog
+import { DelForm } from '../navigationtree/DelForm'; // 👉 ADICIÓN: DelForm
 
 const LS_SELECTED_STYCKE_ID = 'selectedStyckeId';
 const LS_KRAV_SCOPE = 'kravScope';
@@ -69,10 +58,10 @@ function getInitialScope(search: string): KravListFilter | null {
 export const KravTreeAndTable = () => {
   const location = useLocation();
 
-  // Inicialización única desde URL/LS
+  // Inicialización única desde URL/LS con una sola lectura coherente
   const initialScope = useMemo(() => getInitialScope(location.search), [location.search]);
 
-  // 1) Scope
+  // 1) Scope: fuente de la verdad (persistido)
   const [scope, setScope] = useState<KravListFilter | null>(initialScope);
 
   // 2) selectedStyckeId solo si el scope es stycke (para resaltar en la lista)
@@ -107,7 +96,7 @@ export const KravTreeAndTable = () => {
     return s != null ? Number.parseInt(s, 10) : null;
   });
 
-  // Persistir expansiones
+  // Persistir expansiones (si es null, limpiamos la clave)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (expandedDelId == null) localStorage.removeItem(LS_EXP_DEL);
@@ -129,22 +118,10 @@ export const KravTreeAndTable = () => {
   // Mobile sheet state
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
-  // "Ny DEL"
+  // 👉 ADDITION: State of the "Ny del" dialogue
   const [openNewDel, setOpenNewDel] = useState(false);
 
-  // 👉 Estados levantados de TODOS los formularios
-  const [editDel, setEditDel] = useState<Del | null>(null);
-
-  const [createAvsnittDelId, setCreateAvsnittDelId] = useState<number | null>(null);
-  const [editAvsnitt, setEditAvsnitt] = useState<AvsnittType | null>(null);
-
-  const [createOmradeAvsnittId, setCreateOmradeAvsnittId] = useState<number | null>(null);
-  const [editOmrade, setEditOmrade] = useState<OmradeType | null>(null);
-
-  const [createStyckeOmradeId, setCreateStyckeOmradeId] = useState<number | null>(null);
-  const [editStycke, setEditStycke] = useState<StyckeType | null>(null);
-
-  // Auto-expands cuando scope=stycke
+  // Automatically open branches when scope is Stycke (DOES NOT clear scope; not a user action)
   useEffect(() => {
     if (!parentsIds) return;
     if (parentsIds.delId) setExpandedDelId(parentsIds.delId);
@@ -162,16 +139,21 @@ export const KravTreeAndTable = () => {
       localStorage.setItem(LS_SELECTED_STYCKE_ID, String(id));
     }
     setIsMobileNavOpen(false);
+    // Las expansiones correctas se abrirán por useStyckeParents y quedarán persistidas
   }, []);
 
   const handleSelectScope = useCallback((next: KravListFilter) => {
+    // Si NO es stycke, limpiamos el highlight persistido de stycke
     if (!('styckeId' in next)) {
       setSelectedStyckeId(null);
-      if (typeof window !== 'undefined') localStorage.removeItem(LS_SELECTED_STYCKE_ID);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(LS_SELECTED_STYCKE_ID);
+      }
     } else {
       setSelectedStyckeId(next.styckeId!);
-      if (typeof window !== 'undefined')
+      if (typeof window !== 'undefined') {
         localStorage.setItem(LS_SELECTED_STYCKE_ID, String(next.styckeId!));
+      }
     }
     setScope(next);
     if (typeof window !== 'undefined') {
@@ -180,10 +162,16 @@ export const KravTreeAndTable = () => {
     setIsMobileNavOpen(false);
   }, []);
 
+  /**
+   * Al posicionarse en una rama principal (Del) por acción del usuario,
+   * mostramos SIEMPRE la pantalla inicial: limpiamos scope y selección.
+   * Nota: los auto-expands (useStyckeParents) NO usan este handler.
+   */
   const handleExpandDel = useCallback((id: number) => {
     const normalized = id > 0 ? id : null;
     setExpandedDelId(normalized);
-    // Acción del usuario: pantalla inicial
+
+    // 👉 Acción del usuario: reseteamos para mostrar pantalla inicial
     setScope(null);
     setSelectedStyckeId(null);
     if (typeof window !== 'undefined') {
@@ -192,6 +180,7 @@ export const KravTreeAndTable = () => {
     }
   }, []);
 
+  // Mantengo la firma de estos (no afectan pantalla inicial)
   const handleExpandAvsnitt = useCallback((id: number) => {
     setExpandedAvsnittId(id > 0 ? id : null);
   }, []);
@@ -199,7 +188,7 @@ export const KravTreeAndTable = () => {
     setExpandedOmradeId(id > 0 ? id : null);
   }, []);
 
-  // Sincronización con ?styckeId
+  // Sincronización con ?styckeId (evita doble set si ya coincide)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const styckeIdStr = params.get('styckeId');
@@ -212,7 +201,7 @@ export const KravTreeAndTable = () => {
       scope && 'styckeId' in scope && typeof scope.styckeId === 'number' && scope.styckeId === id;
     const isSameSelected = selectedStyckeId === id;
 
-    if (isSameScope && isSameSelected) return;
+    if (isSameScope && isSameSelected) return; // no-op si ya coincide
 
     const next: KravListFilter = { styckeId: id };
     setScope(next);
@@ -223,7 +212,7 @@ export const KravTreeAndTable = () => {
     }
   }, [location.search, scope, selectedStyckeId]);
 
-  // Breadcrumbs: solo cuando scope=stycke
+  // Breadcrumbs: solo pasan parents cuando scope es stycke
   const styckeParentsForBreadcrumbs = useMemo(() => {
     if (scope && 'styckeId' in scope && typeof scope.styckeId === 'number') {
       return parentsIds ?? null;
@@ -246,6 +235,7 @@ export const KravTreeAndTable = () => {
         aria-label='Navigationspanel'
       >
         <div className='sticky top-0 z-10 bg-card/70 backdrop-blur-sm -mx-3 md:-mx-4 px-3 md:px-4 py-2'>
+          {/* 👉 ADDITION: "Ny del" button aligned with "Navigering" */}
           <div className='flex items-center justify-between'>
             <h2 className='text-sm font-semibold tracking-wide text-muted-foreground'>
               Navigering
@@ -275,14 +265,6 @@ export const KravTreeAndTable = () => {
           onExpandAvsnitt={handleExpandAvsnitt}
           onExpandOmrade={handleExpandOmrade}
           onSelectScope={handleSelectScope}
-          // 👉 Handlers que abren formularios (elevados)
-          onOpenDelEdit={setEditDel}
-          onOpenAvsnittCreate={setCreateAvsnittDelId}
-          onOpenAvsnittEdit={setEditAvsnitt}
-          onOpenOmradeCreate={setCreateOmradeAvsnittId}
-          onOpenOmradeEdit={setEditOmrade}
-          onOpenStyckeCreate={setCreateStyckeOmradeId}
-          onOpenStyckeEdit={setEditStycke}
         />
       </aside>
 
@@ -292,7 +274,7 @@ export const KravTreeAndTable = () => {
         <div className='sticky top-0 z-20 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-3 md:px-4 py-2'>
           <div className='flex items-center gap-2'>
             {/* Mobile open sidebar */}
-            <Sheet modal={false} open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
+            <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
               <SheetTrigger asChild className='lg:hidden'>
                 <Button variant='outline' size='icon' aria-label='Öppna navigation'>
                   <PanelLeft className='h-5 w-5' />
@@ -300,6 +282,7 @@ export const KravTreeAndTable = () => {
               </SheetTrigger>
 
               <SheetContent side='left' className='w-[85vw] sm:w-[380px] p-0'>
+                {/* 👉 ADICIÓN: botón "Ny del" en header del panel móvil */}
                 <div className='px-4 pt-4 pb-2 sticky top-0 z-10 bg-background/80 backdrop-blur'>
                   <div className='flex items-center justify-between gap-2'>
                     <SheetHeader className='p-0'>
@@ -320,6 +303,7 @@ export const KravTreeAndTable = () => {
 
                 <Separator />
                 <div className='h-[calc(100%-3.5rem)] overflow-auto p-3 md:p-4'>
+                  {/* Renderiza el árbol solo cuando el sheet está abierto */}
                   {isMobileNavOpen && (
                     <NavigationTree
                       delList={delList}
@@ -333,42 +317,13 @@ export const KravTreeAndTable = () => {
                       onExpandAvsnitt={handleExpandAvsnitt}
                       onExpandOmrade={handleExpandOmrade}
                       onSelectScope={handleSelectScope}
-                      // 👉 Handlers elevadas también aquí
-                      onOpenDelEdit={(d) => {
-                        setIsMobileNavOpen(false);
-                        setTimeout(() => setEditDel(d), 0);
-                      }}
-                      onOpenAvsnittCreate={(delId) => {
-                        setIsMobileNavOpen(false);
-                        setTimeout(() => setCreateAvsnittDelId(delId), 0);
-                      }}
-                      onOpenAvsnittEdit={(a) => {
-                        setIsMobileNavOpen(false);
-                        setTimeout(() => setEditAvsnitt(a), 0);
-                      }}
-                      onOpenOmradeCreate={(avsnittId) => {
-                        setIsMobileNavOpen(false);
-                        setTimeout(() => setCreateOmradeAvsnittId(avsnittId), 0);
-                      }}
-                      onOpenOmradeEdit={(o) => {
-                        setIsMobileNavOpen(false);
-                        setTimeout(() => setEditOmrade(o), 0);
-                      }}
-                      onOpenStyckeCreate={(omradeId) => {
-                        setIsMobileNavOpen(false);
-                        setTimeout(() => setCreateStyckeOmradeId(omradeId), 0);
-                      }}
-                      onOpenStyckeEdit={(s) => {
-                        setIsMobileNavOpen(false);
-                        setTimeout(() => setEditStycke(s), 0);
-                      }}
                     />
                   )}
                 </div>
               </SheetContent>
             </Sheet>
 
-            {/* Breadcrumbs */}
+            {/* Breadcrumbs: solo cuando HAY scope → si no, no se muestra nada */}
             {scope ? (
               <KravBreadcrumbs
                 key={crumbsKey}
@@ -393,154 +348,23 @@ export const KravTreeAndTable = () => {
             </div>
           ) : (
             <div className='h-full flex flex-col items-center justify-center text-center text-muted-foreground'>
-              <img src={isaglogo} alt='Isag Logo' className='h-38 w-100' />
+              <img src={IsagLogo} alt='Isag Logo' className='h-38 w-100' />
               <p className='mt-4 max-w-[48ch] text-balance'>
-                Välj ett Avsnitt, Område eller Stycke till vänster för att se/kreate/update/delete
-                deras <span className='font-medium'>Krav</span>.
+                Välj ett stycke, avsnitt eller område till vänster för att se/kreate deras{' '}
+                <span className='font-medium'>Krav</span>.
               </p>
             </div>
           )}
         </div>
       </main>
 
-      {/* ----- Diálogos compartidos (desktop + móvil) ----- */}
-
-      {/* Ny DEL (create) */}
+      {/* 👉 ADDITION: Shared dialog (desktop + mobile) with DelForm */}
       <Dialog open={openNewDel} onOpenChange={setOpenNewDel}>
-        <DialogContent className='sm:max-w-[520px] z-[60]'>
+        <DialogContent className='sm:max-w-[520px]'>
           <DialogHeader>
             <DialogTitle>Ny DEL</DialogTitle>
           </DialogHeader>
           <DelForm mode='create' onClose={() => setOpenNewDel(false)} />
-        </DialogContent>
-      </Dialog>
-
-      {/* Del (edit/delete) */}
-      <Dialog open={!!editDel} onOpenChange={(o) => !o && setEditDel(null)}>
-        <DialogContent className='sm:max-w-[520px] z-[60]'>
-          <DialogHeader>
-            <DialogTitle>Redigera DEL</DialogTitle>
-          </DialogHeader>
-          {editDel && <DelForm mode='edit' initialDel={editDel} onClose={() => setEditDel(null)} />}
-        </DialogContent>
-      </Dialog>
-
-      {/* Avsnitt (create) */}
-      <Dialog
-        open={createAvsnittDelId != null}
-        onOpenChange={(o) => !o && setCreateAvsnittDelId(null)}
-      >
-        <DialogContent className='sm:max-w-[520px] z-[60]'>
-          <DialogHeader>
-            <DialogTitle>Skapa AVSNITT</DialogTitle>
-          </DialogHeader>
-          {createAvsnittDelId != null && (
-            <AvsnittForm
-              mode='create'
-              parentDelId={createAvsnittDelId}
-              onCreated={(created) => {
-                handleExpandDel(createAvsnittDelId);
-                handleExpandAvsnitt(created.id);
-                handleSelectScope({ avsnittId: created.id });
-              }}
-              onClose={() => setCreateAvsnittDelId(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Avsnitt (edit/delete) */}
-      <Dialog open={!!editAvsnitt} onOpenChange={(o) => !o && setEditAvsnitt(null)}>
-        <DialogContent className='sm:max-w-[520px] z-[60]'>
-          <DialogHeader>
-            <DialogTitle>Redigera AVSNITT</DialogTitle>
-          </DialogHeader>
-          {editAvsnitt && (
-            <AvsnittForm
-              mode='edit'
-              initialAvsnitt={editAvsnitt}
-              onClose={() => setEditAvsnitt(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Område (create) */}
-      <Dialog
-        open={createOmradeAvsnittId != null}
-        onOpenChange={(o) => !o && setCreateOmradeAvsnittId(null)}
-      >
-        <DialogContent className='sm:max-w-[520px] z-[60]'>
-          <DialogHeader>
-            <DialogTitle>Skapa OMRÅDE</DialogTitle>
-          </DialogHeader>
-          {createOmradeAvsnittId != null && (
-            <OmradeForm
-              mode='create'
-              parentAvsnittId={createOmradeAvsnittId}
-              onCreated={(created) => {
-                handleExpandAvsnitt(created.avsnittId);
-                handleExpandOmrade(created.id);
-                handleSelectScope({ omradeId: created.id });
-              }}
-              onClose={() => setCreateOmradeAvsnittId(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Område (edit/delete) */}
-      <Dialog open={!!editOmrade} onOpenChange={(o) => !o && setEditOmrade(null)}>
-        <DialogContent className='sm:max-w-[520px] z-[60]'>
-          <DialogHeader>
-            <DialogTitle>Redigera OMRÅDE</DialogTitle>
-          </DialogHeader>
-          {editOmrade && (
-            <OmradeForm
-              mode='edit'
-              initialOmrade={editOmrade}
-              onClose={() => setEditOmrade(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Stycke (create) */}
-      <Dialog
-        open={createStyckeOmradeId != null}
-        onOpenChange={(o) => !o && setCreateStyckeOmradeId(null)}
-      >
-        <DialogContent className='sm:max-w-[520px] z-[60]'>
-          <DialogHeader>
-            <DialogTitle>Skapa STYCKE</DialogTitle>
-          </DialogHeader>
-          {createStyckeOmradeId != null && (
-            <StyckeForm
-              mode='create'
-              parentOmradeId={createStyckeOmradeId}
-              onCreated={(created) => {
-                handleExpandOmrade(created.omradeId);
-                handleSelectStycke(created.id);
-              }}
-              onClose={() => setCreateStyckeOmradeId(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Stycke (edit/delete) */}
-      <Dialog open={!!editStycke} onOpenChange={(o) => !o && setEditStycke(null)}>
-        <DialogContent className='sm:max-w-[520px] z-[60]'>
-          <DialogHeader>
-            <DialogTitle>Redigera STYCKE</DialogTitle>
-          </DialogHeader>
-          {editStycke && (
-            <StyckeForm
-              mode='edit'
-              initialStycke={editStycke}
-              onClose={() => setEditStycke(null)}
-            />
-          )}
         </DialogContent>
       </Dialog>
     </div>

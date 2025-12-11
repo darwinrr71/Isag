@@ -28,7 +28,6 @@ import {
   MenubarSubTrigger,
   MenubarTrigger,
 } from '@/components/ui/menubar';
-import { Link } from 'react-router-dom';
 
 interface MenubarNavProps {
   className?: string;
@@ -37,16 +36,6 @@ interface MenubarNavProps {
 export const MenubarNav: React.FC<MenubarNavProps> = ({ className = '' }) => {
   return (
     <Menubar className={`rounded-none border-none bg-transparent ${className}`}>
-      <MenubarMenu>
-        <MenubarTrigger>Ism</MenubarTrigger>
-        <MenubarContent>
-          <MenubarItem asChild>
-            <Link to='/navigationtable'>
-              Kravs <MenubarShortcut>⌘K</MenubarShortcut>
-            </Link>
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
         <MenubarContent>

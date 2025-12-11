@@ -1,3 +1,16 @@
+/**
+ * ---------------------------------------------------------
+ * Project: ISAG AB
+ * Developer Full Stack: Darwin Rengifo
+ * Create Date: 2025-10-27
+ * Design Name: svarController.ts
+ * Tools: TypeScript, Express, Prisma ORM
+ * Description:
+ * Hanterar CRUD-operationer för "Svar". Hämtar svar kopplade till
+ * Stycke, Område och Avsnitt samt sparar användarsvar för ett visst krav.
+ * Säkerställer datavalidering och hanterar fel vid databasoperationer.
+ * -----------------------------------------------------------
+ */
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import type { SvarInput } from '../schemas/svar.schema';

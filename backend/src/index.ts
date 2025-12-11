@@ -29,8 +29,10 @@ dotenv.config();
 const app = express();
 
 app.use(cors({ origin: process.env.FRONTEND_URL }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+/** Strict limits are implemented on the size of request bodies (e.g., JSON or file uploads). This helps prevent Denial of Service (DoS) attacks that attempt to overwhelm the server with massive payloads. */
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
 // Mounts the authentication router at the root of the site
 // Mounts the API router under the '/api' prefix

@@ -100,7 +100,7 @@ export const DelForm: React.FC<DelFormProps> = ({ mode, initialDel, onClose }) =
 
       {/* Delete confirmation */}
       <AlertDialog open={openConfirm} onOpenChange={setOpenConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent className='sm:max-w-[520px] z-[80]'>
           <AlertDialogHeader>
             <AlertDialogTitle>Radera DEL?</AlertDialogTitle>
             <AlertDialogDescription>

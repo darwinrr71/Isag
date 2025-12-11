@@ -1,4 +1,17 @@
-// src/schemas/krav.schema.ts
+/**
+ * ---------------------------------------------------------
+ * Project: ISAG AB
+ * Developer Full Stack: Darwin Rengifo
+ * Create Date: 2025-10-27
+ * Design Name: krav.schema.ts
+ * Tools: TypeScript, Zod
+ * Description:
+ * Definierar valideringsscheman för skapande, uppdatering och borttagning
+ * av "Krav"-poster. Säkerställer att endast ett av scope-ID:n (styckeId,
+ * avsnittId eller områdeId) används korrekt, samt att kravtext och kod
+ * alltid innehåller giltiga värden innan de skickas till API:t.
+ * -----------------------------------------------------------
+ */
 import { z } from 'zod';
 
 // ============================================================

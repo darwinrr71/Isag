@@ -1,4 +1,4 @@
-// src/pages/krav/NavigationTree.tsx
+// src/components/krav/NavigationTree.tsx
 import {
   type Del,
   type Avsnitt as AvsnittType,
@@ -23,6 +23,13 @@ import type { KravListFilter } from '@/hooks/useKrav';
 import { useQueryClient } from '@tanstack/react-query';
 import { TreeNodeActions } from '../navigationtree/TreeNodeActions';
 
+// Dialogs + Forms
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DelForm } from '../navigationtree/DelForm';
+import { AvsnittForm } from '../navigationtree/AvsnittForm';
+import { OmradeForm } from '../navigationtree/OmradeForm';
+import { StyckeForm } from '../navigationtree/StyckeForm';
+
 interface Props {
   delList: Del[];
   selectedStyckeId: number | null;
@@ -37,15 +44,6 @@ interface Props {
   onExpandOmrade?: (omradeId: number) => void;
   /** Avisar al padre que se quiere ver Krav de Avsnitt u Område */
   onSelectScope?: (scope: KravListFilter) => void;
-
-  /** 👉 Handlers elevadas al padre para abrir formularios */
-  onOpenDelEdit: (del: Del) => void;
-  onOpenAvsnittCreate: (delId: number) => void;
-  onOpenAvsnittEdit: (a: AvsnittType) => void;
-  onOpenOmradeCreate: (avsnittId: number) => void;
-  onOpenOmradeEdit: (o: OmradeType) => void;
-  onOpenStyckeCreate: (omradeId: number) => void;
-  onOpenStyckeEdit: (s: StyckeType) => void;
 }
 
 export const NavigationTree = ({
@@ -60,15 +58,6 @@ export const NavigationTree = ({
   expandedOmradeId,
   onExpandOmrade,
   onSelectScope,
-
-  // handlers levantados
-  onOpenDelEdit,
-  onOpenAvsnittCreate,
-  onOpenAvsnittEdit,
-  onOpenOmradeCreate,
-  onOpenOmradeEdit,
-  onOpenStyckeCreate,
-  onOpenStyckeEdit,
 }: Props) => {
   const sortedDelList = useSortedArray(delList, 'id', 'asc');
 
@@ -83,6 +72,21 @@ export const NavigationTree = ({
       }),
     [qc],
   );
+
+  // Del (edit)
+  const [editDel, setEditDel] = useState<Del | null>(null);
+
+  // Avsnitt (create desde DEL, edit)
+  const [createAvsnittDelId, setCreateAvsnittDelId] = useState<number | null>(null);
+  const [editAvsnitt, setEditAvsnitt] = useState<AvsnittType | null>(null);
+
+  // Område (create desde AVSNITT, edit)
+  const [createOmradeAvsnittId, setCreateOmradeAvsnittId] = useState<number | null>(null);
+  const [editOmrade, setEditOmrade] = useState<OmradeType | null>(null);
+
+  // 👉 Stycke (create desde OMRÅDE, edit/borrar en STYCKE)
+  const [createStyckeOmradeId, setCreateStyckeOmradeId] = useState<number | null>(null);
+  const [editStycke, setEditStycke] = useState<StyckeType | null>(null);
 
   const TreeBody = () => (
     <div role='tree' aria-label='Navigation tree' className='space-y-2'>
@@ -101,14 +105,14 @@ export const NavigationTree = ({
           onExpandOmrade={onExpandOmrade}
           onSelectScope={onSelectScope}
           onPrefetch={prefetch}
-          // Handlers elevadas al padre
-          onOpenDelEdit={onOpenDelEdit}
-          onOpenAvsnittCreate={onOpenAvsnittCreate}
-          onOpenAvsnittEdit={onOpenAvsnittEdit}
-          onOpenOmradeCreate={onOpenOmradeCreate}
-          onOpenOmradeEdit={onOpenOmradeEdit}
-          onOpenStyckeCreate={onOpenStyckeCreate}
-          onOpenStyckeEdit={onOpenStyckeEdit}
+          // Handlers superiores
+          onOpenDelEdit={(d) => setEditDel(d)}
+          onOpenAvsnittCreate={(delId) => setCreateAvsnittDelId(delId)}
+          onOpenAvsnittEdit={(a) => setEditAvsnitt(a)}
+          onOpenOmradeCreate={(avsnittId) => setCreateOmradeAvsnittId(avsnittId)}
+          onOpenOmradeEdit={(o) => setEditOmrade(o)}
+          onOpenStyckeCreate={(omradeId) => setCreateStyckeOmradeId(omradeId)}
+          onOpenStyckeEdit={(s) => setEditStycke(s)}
         />
       ))}
     </div>
@@ -139,6 +143,140 @@ export const NavigationTree = ({
           </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+
+      {/* Del (edit/delete) */}
+      <Dialog open={!!editDel} onOpenChange={(open) => !open && setEditDel(null)}>
+        <DialogContent className='sm:max-w-[520px]'>
+          <DialogHeader>
+            <DialogTitle>Redigera DEL</DialogTitle>
+          </DialogHeader>
+          {editDel ? (
+            <DelForm mode='edit' initialDel={editDel} onClose={() => setEditDel(null)} />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* Avsnitt (create) */}
+      <Dialog
+        open={createAvsnittDelId != null}
+        onOpenChange={(open) => !open && setCreateAvsnittDelId(null)}
+      >
+        <DialogContent className='sm:max-w-[520px]'>
+          <DialogHeader>
+            <DialogTitle>Skapa AVSNITT</DialogTitle>
+          </DialogHeader>
+          {createAvsnittDelId != null ? (
+            <AvsnittForm
+              mode='create'
+              parentDelId={createAvsnittDelId}
+              onCreated={(created) => {
+                onExpandDel(createAvsnittDelId);
+                onExpandAvsnitt(created.id);
+                onSelectScope?.({ avsnittId: created.id });
+              }}
+              onClose={() => setCreateAvsnittDelId(null)}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* Avsnitt (edit/delete) */}
+      <Dialog open={!!editAvsnitt} onOpenChange={(open) => !open && setEditAvsnitt(null)}>
+        <DialogContent className='sm:max-w-[520px]'>
+          <DialogHeader>
+            <DialogTitle>Redigera AVSNITT</DialogTitle>
+          </DialogHeader>
+          {editAvsnitt ? (
+            <AvsnittForm
+              mode='edit'
+              initialAvsnitt={editAvsnitt}
+              onClose={() => setEditAvsnitt(null)}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* Område (create) */}
+      <Dialog
+        open={createOmradeAvsnittId != null}
+        onOpenChange={(open) => !open && setCreateOmradeAvsnittId(null)}
+      >
+        <DialogContent className='sm:max-w-[520px]'>
+          <DialogHeader>
+            <DialogTitle>Skapa OMRÅDE</DialogTitle>
+          </DialogHeader>
+          {createOmradeAvsnittId != null ? (
+            <OmradeForm
+              mode='create'
+              parentAvsnittId={createOmradeAvsnittId}
+              onCreated={(created) => {
+                onExpandAvsnitt(created.avsnittId);
+                onExpandOmrade?.(created.id);
+                onSelectScope?.({ omradeId: created.id });
+              }}
+              onClose={() => setCreateOmradeAvsnittId(null)}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* Område (edit/delete) */}
+      <Dialog open={!!editOmrade} onOpenChange={(open) => !open && setEditOmrade(null)}>
+        <DialogContent className='sm:max-w-[520px]'>
+          <DialogHeader>
+            <DialogTitle>Redigera OMRÅDE</DialogTitle>
+          </DialogHeader>
+          {editOmrade ? (
+            <OmradeForm
+              mode='edit'
+              initialOmrade={editOmrade}
+              onClose={() => setEditOmrade(null)}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* 👉 Stycke (create desde OMRÅDE) */}
+      <Dialog
+        open={createStyckeOmradeId != null}
+        onOpenChange={(open) => !open && setCreateStyckeOmradeId(null)}
+      >
+        <DialogContent className='sm:max-w-[520px]'>
+          <DialogHeader>
+            <DialogTitle>Skapa STYCKE</DialogTitle>
+          </DialogHeader>
+          {createStyckeOmradeId != null ? (
+            <StyckeForm
+              mode='create'
+              parentOmradeId={createStyckeOmradeId}
+              onCreated={(created) => {
+                // expandir Område y seleccionar el Stycke recién creado
+                onExpandOmrade?.(created.omradeId);
+                onSelectStycke(created.id);
+              }}
+              onClose={() => setCreateStyckeOmradeId(null)}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* 👉 Stycke (edit/delete) */}
+      <Dialog open={!!editStycke} onOpenChange={(open) => !open && setEditStycke(null)}>
+        <DialogContent className='sm:max-w-[520px]'>
+          <DialogHeader>
+            <DialogTitle>Redigera STYCKE</DialogTitle>
+          </DialogHeader>
+          {editStycke ? (
+            <StyckeForm
+              mode='edit'
+              initialStycke={editStycke}
+              onClose={() => setEditStycke(null)}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 };
@@ -638,6 +776,7 @@ const OmradeGroup = ({
           id={omrade.id}
           onCreate={(level, id) => {
             if (level !== 'omrade') return;
+            // 👉 Crear Stycke dentro de este Område
             onOpenStyckeCreate(id);
           }}
           onEdit={() =>
@@ -665,6 +804,7 @@ const OmradeGroup = ({
             omradeId={omrade.id}
             onSelect={onSelectStycke}
             selectedStyckeId={selectedStyckeId}
+            // editar/borrar stycke desde el item
             onOpenStyckeEdit={onOpenStyckeEdit}
           />
         </ul>
@@ -767,7 +907,7 @@ const StyckeItem = ({
         {stycke.kod} – {stycke.namn}
       </span>
 
-      {/* Pieza: solo Edit/Delete */}
+      {/* At the PIECE level: solo Manage / Delete (sin Create) */}
       <TreeNodeActions
         level='stycke'
         id={stycke.id}

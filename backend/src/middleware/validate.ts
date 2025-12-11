@@ -1,4 +1,16 @@
-// validate.ts
+/**
+ * ---------------------------------------------------------
+ * Project: ISAG AB
+ * Developer Full Stack: Darwin Rengifo
+ * Create Date: 2025-10-27
+ * Design Name: validate.ts
+ * Tools: TypeScript, Express, Zod
+ * Description:
+ * Middleware som validerar inkommande HTTP-förfrågningar med hjälp av Zod.
+ * Kontrollerar body, query och params enligt definierade scheman innan de
+ * skickas vidare till nästa funktion. Förhindrar ogiltiga data i API-anrop.
+ * -----------------------------------------------------------
+ */
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { ZodError, ZodObject, ZodRawShape } from 'zod';
 

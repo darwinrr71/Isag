@@ -5,7 +5,6 @@ Denna README förklarar huvudmappen `src` i frontend-delen av projektet. Språk:
 OBS: `node_modules` ingår ej.
 
 **Översikt**
-
 - **Projekt**: Frontend i React (TypeScript + Vite).
 - **Huvudmapp**: `src` — all applikationskod finns här.
 
@@ -50,14 +49,12 @@ OBS: `node_modules` ingår ej.
 - `controllers/` (i frontend-mapp): Logik/organisering av klientkod för tex krav eller navigationtree.
 
 **Hur komponenterna samarbetar (enkelt)**
-
 - `main.tsx` startar appen och visar `App`.
 - `App.tsx` använder `AuthProvider` för att hantera inloggning och skyddar rutter med `ProtectedRoute`.
 - Sidor (`pages`) använder `hooks` för att hämta och manipulera data via `api/*` som använder `lib/axios.ts`.
 - UI-komponenterna i `components/ui` används överallt för konsistent design.
 
 **Köra frontend (lokalt)**
-
 1. Öppna en terminal i `isag/frontend`.
 2. Installera beroenden och starta dev-servern:
 
@@ -70,10 +67,8 @@ npm run dev
 Byt `npm` mot `pnpm` eller `yarn` om du använder det.
 
 **Notera**
-
 - Denna README är avsedd som en enkel, grundläggande översikt av `src`.
 - För detaljer, öppna de listade filerna och katalogerna i koden.
-
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -112,15 +107,15 @@ export default tseslint.config([
       // other options...
     },
   },
-]);
+])
 ```
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js
 // eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
 export default tseslint.config([
   globalIgnores(['dist']),
@@ -141,5 +136,5 @@ export default tseslint.config([
       // other options...
     },
   },
-]);
+])
 ```

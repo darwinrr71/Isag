@@ -1,3 +1,16 @@
+/**
+ * ---------------------------------------------------------
+ * Project: ISAG AB
+ * Developer Full Stack: Darwin Rengifo
+ * Create Date: 2025-10-27
+ * Design Name: omrade.schema.ts
+ * Tools: TypeScript, Zod
+ * Description:
+ * Definierar valideringsscheman för skapande, uppdatering och borttagning
+ * av "Område"-poster. Säkerställer att fält som kod, namn och avsnittId
+ * är giltiga innan data skickas till API:t.
+ * -----------------------------------------------------------
+ */
 import { z } from 'zod';
 import { kodSchema, namnSchema, idParams } from './common.schema';
 

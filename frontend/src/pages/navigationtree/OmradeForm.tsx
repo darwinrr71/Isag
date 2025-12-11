@@ -103,7 +103,7 @@ export const OmradeForm: React.FC<OmradeFormProps> = ({
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className='sm:max-w-[520px] z-[80]'>
           <AlertDialogHeader>
             <AlertDialogTitle>Radera område?</AlertDialogTitle>
             <AlertDialogDescription>Detta kan inte ångras.</AlertDialogDescription>

@@ -102,7 +102,7 @@ export const AvsnittForm: React.FC<AvsnittFormProps> = ({
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className='sm:max-w-[520px] z-[80]'>
           <AlertDialogHeader>
             <AlertDialogTitle>Radera avsnitt?</AlertDialogTitle>
             <AlertDialogDescription>Detta kan inte ångras.</AlertDialogDescription>

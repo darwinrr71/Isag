@@ -1,4 +1,17 @@
-// src/controllers/styckeController.ts
+/**
+ * ---------------------------------------------------------
+ * Project: ISAG AB
+ * Developer Full Stack: Darwin Rengifo
+ * Create Date: 2025-10-27
+ * Design Name: styckeController.ts
+ * Tools: TypeScript, Express, Prisma ORM
+ * Description:
+ * Hanterar alla API-förfrågningar relaterade till "Stycke".
+ * Tillhandahåller funktioner för att hämta hierarkiska föräldra-ID:n,
+ * lista stycken enligt Område, samt skapa, uppdatera och ta bort poster.
+ * Säkerställer dataintegritet och förhindrar duplicerade koder.
+ * -----------------------------------------------------------
+ */
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 

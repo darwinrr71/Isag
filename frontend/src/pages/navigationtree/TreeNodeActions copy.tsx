@@ -40,18 +40,6 @@ export const TreeNodeActions: React.FC<TreeNodeActionsProps> = ({
   const handleEdit = () => onEdit?.(level, id);
   const handleDelete = () => onDelete?.(level, id);
 
-  // Ejecuta acciones desde el menú de forma segura en móvil:
-  // - evita burbujeo al nodo padre
-  // - ejecuta en el siguiente frame para que el Dropdown cierre antes
-  const runMenuActionSafely = (
-    e: React.MouseEvent | React.PointerEvent | React.TouchEvent,
-    fn?: () => void,
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
-    requestAnimationFrame(() => fn?.());
-  };
-
   return (
     <div className={className ?? ''}>
       {/* Desktop: caja negra compacta con scrim (no bloquea hover) */}
@@ -91,7 +79,6 @@ export const TreeNodeActions: React.FC<TreeNodeActionsProps> = ({
               type='button'
               size='icon'
               variant='ghost'
-              onPointerDown={(e) => e.stopPropagation()}
               onClick={handleCreate}
               disabled={disabledCreate}
               title='Skapa'
@@ -110,7 +97,6 @@ export const TreeNodeActions: React.FC<TreeNodeActionsProps> = ({
             type='button'
             size='icon'
             variant='ghost'
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={handleEdit}
             disabled={disabledEdit}
             title='Regidera'
@@ -123,12 +109,10 @@ export const TreeNodeActions: React.FC<TreeNodeActionsProps> = ({
           >
             <Pencil className='h-3.5 w-3.5 transition-transform group-hover:scale-110' />
           </Button>
-
           <Button
             type='button'
             size='icon'
             variant='ghost'
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={handleDelete}
             disabled={disabledDelete}
             title='Radera'
@@ -146,51 +130,26 @@ export const TreeNodeActions: React.FC<TreeNodeActionsProps> = ({
 
       {/* Mobile: kebab con menú */}
       <div className='md:hidden'>
-        <DropdownMenu modal={false}>
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon'
-              aria-label='Más acciones'
-              // Evitar que el tap llegue al contenedor padre del árbol
-              onClick={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-            >
+            <Button type='button' variant='ghost' size='icon' aria-label='Más acciones'>
               <MoreVertical className='h-4 w-4' />
             </Button>
           </DropdownMenuTrigger>
-
-          <DropdownMenuContent
-            align='end'
-            className='min-w-40'
-            // Deja que el menú cierre de forma natural; solo evitamos que
-            // Radix devuelva el foco al trigger (iOS flicker)
-            onCloseAutoFocus={(e) => e.preventDefault()}
-          >
+          <DropdownMenuContent align='end' className='min-w-40'>
+            {/* Skapa: oculto en nivel stycke */}
             {!isStycke && (
-              <DropdownMenuItem
-                onClick={(e) => runMenuActionSafely(e, () => onCreate?.(level, id))}
-                disabled={disabledCreate}
-                className='gap-2'
-              >
+              <DropdownMenuItem onClick={handleCreate} disabled={disabledCreate} className='gap-2'>
                 <Plus className='h-4 w-4' />
                 Skapa
               </DropdownMenuItem>
             )}
-
-            <DropdownMenuItem
-              onClick={(e) => runMenuActionSafely(e, () => onEdit?.(level, id))}
-              disabled={disabledEdit}
-              className='gap-2'
-            >
+            <DropdownMenuItem onClick={handleEdit} disabled={disabledEdit} className='gap-2'>
               <Pencil className='h-4 w-4' />
               Regidera
             </DropdownMenuItem>
-
             <DropdownMenuItem
-              onClick={(e) => runMenuActionSafely(e, () => onDelete?.(level, id))}
+              onClick={handleDelete}
               disabled={disabledDelete}
               className='gap-2 text-rose-600 focus:text-rose-600'
             >

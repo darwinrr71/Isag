@@ -19,7 +19,7 @@ import { useProfile } from '@/api/auth';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, UserCircle } from 'lucide-react';
-import IsagLogo from '@/assets/IsagLogo.svg';
+import isaglogo from '@/assets/isaglogo.svg';
 import { MenubarNav } from './MenubarNav';
 
 export const Header = () => {
@@ -41,7 +41,7 @@ export const Header = () => {
           to='/'
           className='flex items-center gap-2 text-xl font-semibold hover:text-primary transition-colors'
         >
-          <img src={IsagLogo} alt='Isag Logo' className='h-8 w-8' />
+          <img src={isaglogo} alt='Isag Logo' className='h-8 w-8' />
           <span>Isag App</span>
         </NavLink>
 

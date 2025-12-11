@@ -151,58 +151,20 @@ export const createKrav = async (req: Request, res: Response, next: NextFunction
 };
 
 // ============================================================
-// ✏️ UPDATE CONTROLLER: Update krav (admite stycke/avsnitt/omrade)
+// ✏️ UPDATE CONTROLLER: Update krav
 // ============================================================
 export const updateKrav = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.validatedParams as UpdateKravParams;
-    const { styckeId, avsnittId, omradeId, ...rest } = req.validatedBody as UpdateKravInput;
-
-    // Solo extrae escalares que Prisma acepta como string/null directamente
-    const { kod, kravText, anvisning } = rest as {
-      kod?: string;
-      kravText?: string;
-      anvisning?: string | null;
-    };
-
-    // Construir el objeto data explícitamente para evitar choques de tipos
-    const data: Prisma.KravUpdateInput = {};
-
-    if (kod !== undefined) data.kod = kod;
-    if (kravText !== undefined) data.kravText = kravText;
-    if (anvisning !== undefined) data.anvisning = anvisning;
-
-    // Determinar si llega alguno de los tres scopes
-    const scopeSet = [styckeId, avsnittId, omradeId].filter(
-      (v): v is number => typeof v === 'number'
-    );
-
-    if (scopeSet.length > 1) {
-      // Mantén la misma regla de "un solo scope a la vez"
-      return res.status(400).json({
-        error: 'Provide exactly one of styckeId, avsnittId, or omradeId when updating scope.',
-      });
-    }
-
-    // Mapear el scope usando connect y desconectando los otros para respetar la unicidad
-    if (typeof styckeId === 'number') {
-      data.stycke = { connect: { id: styckeId } };
-      data.avsnitt = { disconnect: true };
-      data.omrade = { disconnect: true };
-    } else if (typeof avsnittId === 'number') {
-      data.avsnitt = { connect: { id: avsnittId } };
-      data.stycke = { disconnect: true };
-      data.omrade = { disconnect: true };
-    } else if (typeof omradeId === 'number') {
-      data.omrade = { connect: { id: omradeId } };
-      data.stycke = { disconnect: true };
-      data.avsnitt = { disconnect: true };
-    }
-    // Nota: si no llegó ningún scope, no se tocan las relaciones existentes.
+    const { styckeId, ...rest } = req.validatedBody as UpdateKravInput;
 
     const krav = await prisma.krav.update({
       where: { id },
-      data,
+      data: {
+        ...rest,
+        stycke:
+          typeof styckeId === 'number' && styckeId > 0 ? { connect: { id: styckeId } } : undefined,
+      },
     });
 
     return res.json(krav);
@@ -211,8 +173,7 @@ export const updateKrav = async (req: Request, res: Response, next: NextFunction
       return res.status(409).json({
         code: 'KRAV_KOD_DUPLICATE',
         field: 'kod',
-        message:
-          'Koden är redan registrerad i denna kontext (stycke/avsnitt/område). Ange en unik kod.',
+        message: 'Koden är redan registrerad i detta stycke. Ange en unik kod.',
       });
     }
     return next(error);
