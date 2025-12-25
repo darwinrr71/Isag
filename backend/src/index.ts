@@ -17,12 +17,12 @@
  */
 // Import types and the global declaration file
 import './types/types';
-
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import authRouter from './routes/authRoutes';
 import apiRouter from './routes/apiRoutes';
+//import aggregateRouter from './routes/aggregateRoutes'; // <-- Ny import
 
 dotenv.config();
 

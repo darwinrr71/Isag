@@ -93,6 +93,13 @@ apiRouter.get('/admin-data', protectedRoute(['Admin']), (req: Request, res: Resp
 /** DEL */
 apiRouter.get('/del', protectedRoute(['Admin', 'Assessor', 'Viewer']), delController.getDelList);
 
+// ✅ NY ROUTE: Aggregate data för diagram
+apiRouter.get(
+  '/del/aggregate',
+  protectedRoute(['Admin', 'Assessor', 'Viewer']),
+  delController.getDelAggregate
+);
+
 apiRouter.post(
   '/del',
   protectedRoute(['Admin']),
@@ -269,5 +276,8 @@ apiRouter.put(
   validate({ body: svarSchema }),
   svarController.saveSvar
 );
+
+// ✅ DEBUG route för att kolla databasens innehåll
+apiRouter.get('/debug-db', delController.debugDatabase);
 
 export default apiRouter;
